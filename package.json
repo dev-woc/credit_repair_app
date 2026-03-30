@@ -1,7 +1,10 @@
 {
-	"name": "link-in-bio-page-builder",
+	"name": "credit-repair",
 	"version": "0.1.0",
 	"private": true,
+	"engines": {
+		"node": ">=20.0.0"
+	},
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
@@ -22,6 +25,7 @@
 		"@dnd-kit/core": "^6.3.1",
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
+		"@hookform/resolvers": "^5.2.2",
 		"@neondatabase/auth": "^0.1.0-beta.21",
 		"@neondatabase/serverless": "^1.0.2",
 		"@rollup/rollup-linux-x64-gnu": "^4.58.0",
@@ -35,6 +39,7 @@
 		"radix-ui": "^1.4.3",
 		"react": "19.1.0",
 		"react-dom": "19.1.0",
+		"react-hook-form": "^7.72.0",
 		"recharts": "^3.7.0",
 		"sonner": "^2.0.7",
 		"tailwind-merge": "^3.5.0",
