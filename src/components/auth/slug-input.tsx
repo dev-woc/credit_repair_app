@@ -33,6 +33,11 @@ export function SlugInput({ value, onChange, error: externalError }: SlugInputPr
 		try {
 			const res = await fetch(`/api/agencies/check-slug?slug=${encodeURIComponent(slug)}`);
 			const data = await res.json();
+			if (!res.ok) {
+				setAvailable(false);
+				setValidationError(data.error ?? "Failed to check availability");
+				return;
+			}
 			setAvailable(data.available);
 			if (!data.available && data.error) {
 				setValidationError(data.error);
