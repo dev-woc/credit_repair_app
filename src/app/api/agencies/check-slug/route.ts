@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
 		);
 	}
 
-	const [existing] = await db.select({ id: agencies.id }).from(agencies).where(eq(agencies.slug, validSlug.data)).limit(1);
+	const [existing] = await db
+		.select({ id: agencies.id })
+		.from(agencies)
+		.where(eq(agencies.slug, validSlug.data))
+		.limit(1);
 
 	return NextResponse.json({ available: !existing });
 }

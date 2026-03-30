@@ -8,6 +8,13 @@
       "when": 1771628396749,
       "tag": "0000_green_supreme_intelligence",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771718220000,
+      "tag": "0001_scoreos_schema",
+      "breakpoints": true
     }
   ]
 }

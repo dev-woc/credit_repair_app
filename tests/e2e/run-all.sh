@@ -2,7 +2,7 @@
 set -e
 
 echo "========================================"
-echo "  Link-in-Bio E2E Test Suite"
+echo "  E2E Test Suite"
 echo "========================================"
 echo ""
 

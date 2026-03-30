@@ -9,7 +9,7 @@ export default function SignupPage() {
 		<Card>
 			<CardHeader className="text-center">
 				<CardTitle className="text-2xl">Create your account</CardTitle>
-				<CardDescription>Get your personal link-in-bio page</CardDescription>
+				<CardDescription>Get your personal page</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<GoogleButton />

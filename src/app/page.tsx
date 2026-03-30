@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Link as LinkIcon } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -13,8 +13,7 @@ export default function Home() {
 				<div className="space-y-2">
 					<h1 className="text-4xl font-bold tracking-tight">LinkBio</h1>
 					<p className="text-lg text-muted-foreground">
-						Create your personal link-in-bio page in seconds. Share all your
-						links in one place.
+						Create your personal page in seconds. Share all your links in one place.
 					</p>
 				</div>
 
