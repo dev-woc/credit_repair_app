@@ -64,21 +64,21 @@ export function SignupForm() {
 			}
 
 			// 2. Create profile with slug
-			const profileRes = await fetch("/api/profile", {
+			const profileRes = await fetch("/api/agencies", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ slug, displayName: name }),
+				body: JSON.stringify({ slug, name }),
 			});
 
 			if (!profileRes.ok) {
 				const data = await profileRes.json();
-				setErrors({ general: data.error || "Failed to create profile" });
+				setErrors({ general: data.error || "Failed to create agency" });
 				setLoading(false);
 				return;
 			}
 
-			// 3. Redirect to editor
-			router.push("/editor");
+			// 3. Redirect to dashboard
+			router.push("/dashboard");
 		} catch {
 			setErrors({ general: "Something went wrong. Please try again." });
 			setLoading(false);
@@ -88,13 +88,13 @@ export function SignupForm() {
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
 			<div className="space-y-2">
-				<Label htmlFor="name">Name</Label>
+				<Label htmlFor="name">Agency Name</Label>
 				<Input
 					id="name"
-					placeholder="Your name"
+					placeholder="Your agency name"
 					value={name}
 					onChange={(e) => setName(e.target.value)}
-					aria-label="Name"
+					aria-label="Agency Name"
 				/>
 				{errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
 			</div>

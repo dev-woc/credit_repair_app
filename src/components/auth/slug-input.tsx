@@ -31,7 +31,7 @@ export function SlugInput({ value, onChange, error: externalError }: SlugInputPr
 		setChecking(true);
 
 		try {
-			const res = await fetch(`/api/slug/check?slug=${encodeURIComponent(slug)}`);
+			const res = await fetch(`/api/agencies/check-slug?slug=${encodeURIComponent(slug)}`);
 			const data = await res.json();
 			setAvailable(data.available);
 			if (!data.available && data.error) {
