@@ -1,7 +1,5 @@
-import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { agencies } from "@/lib/db/schema";
 import { apiRateLimiter } from "@/lib/rate-limit";
 import { slugCheckSchema, slugSchema } from "@/lib/validations";
 
@@ -29,7 +27,7 @@ export async function GET(request: NextRequest) {
 	}
 
 	const existing = await db.query.agencies.findFirst({
-		where: eq(agencies.slug, validSlug.data),
+		where: (agency, { eq }) => eq(agency.slug, validSlug.data),
 	});
 
 	return NextResponse.json({ available: !existing });
