@@ -3,12 +3,13 @@ import { GraduationCap, UserCheck, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClientStatusBadge } from "@/components/clients/client-status-badge";
+import { DisputeSummaryPanel } from "@/components/dashboard/dispute-summary-panel";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { agencies, clients } from "@/lib/db/schema";
+import { agencies, clients, disputeItems } from "@/lib/db/schema";
 import type { ClientStatus } from "@/types";
 
 export default async function DashboardPage() {
@@ -24,10 +25,37 @@ export default async function DashboardPage() {
 		where: eq(clients.agencyId, agency.id),
 		orderBy: [desc(clients.createdAt)],
 	});
+	const allDisputeItems = await db.query.disputeItems.findMany({
+		where: eq(disputeItems.agencyId, agency.id),
+		with: { client: true },
+		orderBy: [desc(disputeItems.createdAt)],
+	});
 
 	const active = allClients.filter((c) => c.status === "active").length;
 	const graduated = allClients.filter((c) => c.status === "graduated").length;
 	const recent = allClients.slice(0, 5);
+	const pendingStatuses = new Set(["identified", "drafted", "sent", "responded", "escalated"]);
+	const pendingDisputes = allDisputeItems.filter((item) => pendingStatuses.has(item.status));
+	const overdueDisputes = pendingDisputes.filter((item) => {
+		if (!item.dueDate) return false;
+		return item.dueDate.getTime() < Date.now();
+	});
+	const dueSoonDisputes = pendingDisputes.filter((item) => {
+		if (!item.dueDate) return false;
+		const delta = item.dueDate.getTime() - Date.now();
+		const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+		return delta >= 0 && delta <= sevenDaysMs;
+	});
+	const workQueue = pendingDisputes.slice(0, 5).map((item) => ({
+		id: item.id,
+		clientName: item.client ? `${item.client.firstName} ${item.client.lastName}` : "Unknown client",
+		bureau: item.bureau,
+		status: item.status,
+		dueDate: item.dueDate?.toISOString(),
+		priority: overdueDisputes.some((overdueItem) => overdueItem.id === item.id)
+			? ("high" as const)
+			: ("medium" as const),
+	}));
 
 	return (
 		<div className="p-6 space-y-6 max-w-6xl mx-auto">
@@ -56,6 +84,13 @@ export default async function DashboardPage() {
 					description="Program complete"
 				/>
 			</div>
+
+			<DisputeSummaryPanel
+				pendingCount={pendingDisputes.length}
+				overdueCount={overdueDisputes.length}
+				dueSoonCount={dueSoonDisputes.length}
+				workQueue={workQueue}
+			/>
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">

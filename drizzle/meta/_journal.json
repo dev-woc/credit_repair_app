@@ -15,6 +15,13 @@
       "when": 1771718220000,
       "tag": "0001_scoreos_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774914953000,
+      "tag": "0002_dispute_workflow",
+      "breakpoints": true
     }
   ]
 }

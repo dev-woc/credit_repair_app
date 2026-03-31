@@ -4,11 +4,19 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ClientStatusBadge } from "@/components/clients/client-status-badge";
 import { ContractPreview } from "@/components/clients/contract-preview";
+import { ClientDisputeWorkspace } from "@/components/clients/dispute-workspace";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { agencies, clients } from "@/lib/db/schema";
+import {
+	agencies,
+	clientDocuments,
+	clients,
+	creditReports,
+	disputeItems,
+	disputeLetters,
+} from "@/lib/db/schema";
 import type { ClientStatus } from "@/types";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,13 +36,34 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
 	if (!client) notFound();
 
+	const [creditReportRows, disputeItemRows, disputeLetterRows, documentRows] = await Promise.all([
+		db.query.creditReports.findMany({
+			where: and(eq(creditReports.clientId, client.id), eq(creditReports.agencyId, agency.id)),
+			with: { tradelines: true },
+		}),
+		db.query.disputeItems.findMany({
+			where: and(eq(disputeItems.clientId, client.id), eq(disputeItems.agencyId, agency.id)),
+			orderBy: [disputeItems.createdAt],
+		}),
+		db.query.disputeLetters.findMany({
+			where: and(eq(disputeLetters.clientId, client.id), eq(disputeLetters.agencyId, agency.id)),
+			with: { disputeItem: true },
+			orderBy: [disputeLetters.generatedAt],
+		}),
+		db.query.clientDocuments.findMany({
+			where: and(eq(clientDocuments.clientId, client.id), eq(clientDocuments.agencyId, agency.id)),
+			orderBy: [clientDocuments.uploadedAt],
+		}),
+	]);
+
 	const goalsDisplay = client.goals
 		.split(",")
 		.map((g) => g.trim().replace(/_/g, " "))
 		.join(", ");
+	const tradelineRows = creditReportRows.flatMap((report) => report.tradelines);
 
 	return (
-		<div className="p-6 space-y-6 max-w-4xl mx-auto">
+		<div className="mx-auto max-w-6xl space-y-6 p-6">
 			<div className="flex items-center gap-4">
 				<Button variant="ghost" size="icon" asChild>
 					<Link href="/clients">
@@ -50,7 +79,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 				<ClientStatusBadge status={client.status as ClientStatus} />
 			</div>
 
-			<div className="grid gap-6 lg:grid-cols-2">
+			<div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-base">Client Details</CardTitle>
@@ -79,6 +108,50 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 					<ContractPreview clientId={client.id} contract={client.contract} onSigned={() => {}} />
 				)}
 			</div>
+
+			<ClientDisputeWorkspace
+				client={{
+					firstName: client.firstName,
+					lastName: client.lastName,
+					email: client.email,
+					phone: client.phone,
+					goals: client.goals,
+					status: client.status as ClientStatus,
+					notes: client.notes,
+					createdAt: new Date(client.createdAt).toISOString(),
+				}}
+				tradelines={tradelineRows.map((tradeline) => ({
+					id: tradeline.id,
+					bureau: tradeline.bureau,
+					creditor: tradeline.creditorName,
+					accountType: tradeline.accountType || "Unspecified account",
+					status: tradeline.accountStatus || "Unknown",
+					balance: tradeline.balance || undefined,
+					lastVerifiedAt: tradeline.reportedDate?.toISOString(),
+				}))}
+				disputes={disputeItemRows.map((item) => ({
+					id: item.id,
+					bureau: item.bureau,
+					status: item.status,
+					reason: item.reason,
+					round: item.roundNumber,
+					dueDate: item.dueDate?.toISOString(),
+					notes: item.notes || item.evidenceSummary || undefined,
+				}))}
+				documents={documentRows.map((document) => ({
+					id: document.id,
+					name: document.fileName,
+					type: document.documentType,
+					uploadedAt: document.uploadedAt.toISOString(),
+				}))}
+				letters={disputeLetterRows.map((letter) => ({
+					id: letter.id,
+					title: `${letter.type.replace("_", " ")} dispute letter`,
+					bureau: letter.disputeItem?.bureau,
+					status: letter.status,
+					createdAt: letter.generatedAt.toISOString(),
+				}))}
+			/>
 		</div>
 	);
 }
