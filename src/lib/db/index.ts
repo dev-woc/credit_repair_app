@@ -1,10 +1,29 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import * as schema from "./schema";
 
+const globalForDb = globalThis as typeof globalThis & {
+	__creditRepairDbPool?: Pool;
+};
+
 function createDb(url: string) {
-	const sql = neon(url);
-	return drizzle(sql, { schema });
+	const parsedUrl = new URL(url);
+	const isLocalDatabase =
+		parsedUrl.hostname === "localhost" ||
+		parsedUrl.hostname === "127.0.0.1" ||
+		parsedUrl.hostname === "::1";
+	const pool =
+		globalForDb.__creditRepairDbPool ??
+		new Pool({
+			connectionString: url,
+			ssl: isLocalDatabase ? undefined : { rejectUnauthorized: false },
+		});
+
+	if (!globalForDb.__creditRepairDbPool) {
+		globalForDb.__creditRepairDbPool = pool;
+	}
+
+	return drizzle(pool, { schema });
 }
 
 type Database = ReturnType<typeof createDb>;

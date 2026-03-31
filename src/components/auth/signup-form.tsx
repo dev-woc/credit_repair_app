@@ -5,7 +5,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth/client";
 import { slugSchema } from "@/lib/validations";
 import { SlugInput } from "./slug-input";
 
@@ -50,34 +49,24 @@ export function SignupForm() {
 		setErrors({});
 
 		try {
-			// 1. Create Neon Auth user
-			const { error } = await authClient.signUp.email({
-				email,
-				password,
-				name,
-			});
-
-			if (error) {
-				setErrors({ general: error.message || "Failed to create account" });
-				setLoading(false);
-				return;
-			}
-
-			// 2. Create profile with slug
-			const profileRes = await fetch("/api/agencies", {
+			const response = await fetch("/api/session/sign-up", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ slug, name }),
+				body: JSON.stringify({
+					email,
+					password,
+					name,
+					slug,
+				}),
 			});
 
-			if (!profileRes.ok) {
-				const data = await profileRes.json();
-				setErrors({ general: data.error || "Failed to create agency" });
+			if (!response.ok) {
+				const data = await response.json().catch(() => null);
+				setErrors({ general: data?.error || "Failed to create account" });
 				setLoading(false);
 				return;
 			}
 
-			// 3. Redirect to dashboard
 			router.push("/dashboard");
 		} catch {
 			setErrors({ general: "Something went wrong. Please try again." });

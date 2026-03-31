@@ -5,8 +5,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth/client";
-
 export function LoginForm() {
 	const router = useRouter();
 	const [email, setEmail] = useState("");
@@ -20,13 +18,18 @@ export function LoginForm() {
 		setError("");
 
 		try {
-			const { error: authError } = await authClient.signIn.email({
-				email,
-				password,
+			const response = await fetch("/api/session/sign-in", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					email,
+					password,
+				}),
 			});
 
-			if (authError) {
-				setError("Invalid email or password");
+			if (!response.ok) {
+				const data = await response.json().catch(() => null);
+				setError(data?.error || "Invalid email or password");
 				setLoading(false);
 				return;
 			}
