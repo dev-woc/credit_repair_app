@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json(
 			{
 				available: false,
-				error: "Slug check is temporarily unavailable",
+				error: error instanceof Error ? error.message : "Slug check is temporarily unavailable",
 			},
 			{ status: 500 },
 		);

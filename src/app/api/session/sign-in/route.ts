@@ -8,27 +8,35 @@ const signInSchema = z.object({
 });
 
 export async function POST(request: Request) {
-	const body = await request.json().catch(() => null);
-	const result = signInSchema.safeParse(body);
+	try {
+		const body = await request.json().catch(() => null);
+		const result = signInSchema.safeParse(body);
 
-	if (!result.success) {
+		if (!result.success) {
+			return NextResponse.json(
+				{ error: result.error.issues[0]?.message ?? "Invalid login data" },
+				{ status: 400 },
+			);
+		}
+
+		const { error } = await getAuth().signIn.email({
+			email: result.data.email,
+			password: result.data.password,
+		});
+
+		if (error) {
+			return NextResponse.json(
+				{ error: error.message || "Invalid email or password" },
+				{ status: error.status || 401 },
+			);
+		}
+
+		return NextResponse.json({ ok: true });
+	} catch (error) {
+		console.error("Session login failed", error);
 		return NextResponse.json(
-			{ error: result.error.issues[0]?.message ?? "Invalid login data" },
-			{ status: 400 },
+			{ error: error instanceof Error ? error.message : "Unexpected error while signing in" },
+			{ status: 500 },
 		);
 	}
-
-	const { error } = await getAuth().signIn.email({
-		email: result.data.email,
-		password: result.data.password,
-	});
-
-	if (error) {
-		return NextResponse.json(
-			{ error: error.message || "Invalid email or password" },
-			{ status: error.status || 401 },
-		);
-	}
-
-	return NextResponse.json({ ok: true });
 }
